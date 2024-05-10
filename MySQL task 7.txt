@@ -1,0 +1,97 @@
+task 1
+CREATE SCHEMA IF NOT EXISTS pandemic;
+
+task 2
+Нормалізація таблиці infectious_cases може включати розбиття її на дві таблиці: одна для інформації про самі випадки інфекції, а інша для інформації про країни, де вони відбулися. Ось як це може виглядати:
+
+Створення таблиці для випадків інфекції
+CREATE TABLE pandemic.infection_cases (
+    case_id INT AUTO_INCREMENT PRIMARY KEY,
+    date_reported DATE,
+    country_id INT,
+    FOREIGN KEY (country_id) REFERENCES pandemic.countries(country_id)
+);
+
+Створення таблиці для країн
+CREATE TABLE pandemic.countries (
+    country_id INT AUTO_INCREMENT PRIMARY KEY,
+    country_name VARCHAR(255) UNIQUE
+);
+
+Таким чином, в таблиці infection_cases буде поля case_id, date_reported та country_id, де country_id буде зовнішнім ключем, що посилається на country_id у таблиці countries. У свою чергу, в таблиці countries буде поля country_id та country_name, де country_id буде первинним ключем.
+
+Така структура дозволить нам нормалізувати дані та уникнути повторення країн у кожному записі про випадок інфекції.
+
+task 3
+
+SELECT Entity, Code, AVG(Number_rabies) AS avg_rabies,
+       MIN(Number_rabies) AS min_rabies,
+       MAX(Number_rabies) AS max_rabies,
+       SUM(Number_rabies) AS sum_rabies
+FROM infectious_cases
+WHERE Number_rabies <> ''
+GROUP BY Entity, Code
+ORDER BY avg_rabies DESC
+LIMIT 10;
+
+
+task 4
+
+1 Колонка, що створює дату першого січня відповідного року.
+2 Колонка, що дорівнює поточній даті.
+Потім ми обчислимо різницю в роках між цими двома датами. Ось SQL-запит для створення цих колонок та обчислення різниці в роках:
+
+
+Додати колонку для першого січня відповідного року
+ALTER TABLE your_table ADD COLUMN start_of_year DATE;
+
+Оновити значення в новій колонці
+UPDATE your_table SET start_of_year = CONCAT(Year, '-01-01');
+
+Додати колонку для поточної дати
+ALTER TABLE your_table ADD COLUMN current_date DATE;
+
+Оновити значення в новій колонці
+UPDATE your_table SET current_date = CURDATE();
+
+ Додати колонку для різниці в роках
+ALTER TABLE your_table ADD COLUMN year_difference INT;
+
+ Оновити значення в новій колонці
+UPDATE your_table SET year_difference = YEAR(current_date) - YEAR(start_of_year);
+Після виконання цих запитів у вашій таблиці будуть додані три нові колонки: start_of_year, current_date і year_difference. Колонка start_of_year містить дату першого січня відповідного року для кожного запису. Колонка current_date містить поточну дату для кожного запису. Колонка year_difference містить різницю в роках між поточним роком і роком з start_of_year.
+
+task 5
+Для створення функції, яка обчислює різницю в роках між заданим роком і поточною датою, ми можемо використати вбудовану функцію YEAR() для отримання року поточної дати та використати конвертацію року в дату зі значенням 1 січня.
+
+Ось SQL-запит для створення такої функції та її використання:
+
+Створити функцію
+DELIMITER //
+
+CREATE FUNCTION CalculateYearDifference(input_year INT)
+RETURNS INT
+DETERMINISTIC
+BEGIN
+    DECLARE current_year INT;
+    DECLARE start_of_year DATE;
+    DECLARE year_difference INT;
+    
+   Отримати поточний рік
+    SET current_year = YEAR(CURDATE());
+    
+    Створити дату першого січня відповідного року
+    SET start_of_year = CONCAT(input_year, '-01-01');
+    
+    Обчислити різницю в роках
+    SET year_difference = current_year - YEAR(start_of_year);
+    
+    RETURN year_difference;
+END //
+
+DELIMITER ;
+Ця функція CalculateYearDifference приймає на вхід рік і обчислює різницю в роках між цим роком та поточним роком. Тепер ми можемо використати цю функцію для обчислення різниці в роках для будь-якого року. 
+
+Використання функції
+SELECT CalculateYearDifference(1996) AS year_difference;
+Цей запит поверне різницю в роках між роком 1996 та поточним роком.
